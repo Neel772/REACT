@@ -16,6 +16,8 @@ import About from "./About";
 import Missing from "./Missing";
 import api from "./api/posts.js";
 import EditPost from "./EditPost.js";
+import useWindowSize from "./hooks/useWindowSize.js";
+import useAxiosFetch from "./hooks/useAxiosFetch.js";
 
 function App() {
   const [posts, setPosts] = useState([]);
@@ -26,25 +28,15 @@ function App() {
   const [editTitle, setEditTitle] = useState("");
   const [editBody, setEditBody] = useState("");
   const navigate = useNavigate();
+  const { width } = useWindowSize();
+
+  const { data, fetchError, isLoading } = useAxiosFetch(
+    "http://localhost:3500/posts"
+  );
 
   useEffect(() => {
-    const fetchPosts = async () => {
-      try {
-        const response = await api.get("/posts");
-        setPosts(response.data);
-      } catch (err) {
-        if (err.response) {
-          //Not in the 200 response range
-          console.log(err.response.data);
-          console.log(err.response.status);
-          console.log(err.response.headers);
-        } else {
-          console.log(`Error: ${err.message}`);
-        }
-      }
-    };
-    fetchPosts();
-  }, []);
+    setPosts(data);
+  }, [data]);
 
   useEffect(() => {
     const filterredResults = posts.filter(
@@ -105,10 +97,19 @@ function App() {
 
   return (
     <div className="App">
-      <Header title="React Js Blog" />
+      <Header title="React Js Blog" width={width} />
       <Nav search={search} setSearch={setSearch} />
       <Routes>
-        <Route path="/" element={<Home posts={searchResults} />} />
+        <Route
+          path="/"
+          element={
+            <Home
+              posts={searchResults}
+              fetchError={fetchError}
+              isLoading={isLoading}
+            />
+          }
+        />
         <Route
           path="/post"
           element={
